@@ -1,0 +1,11 @@
+{
+  "name": "oxygen-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:OxygenPortfolio/oxygen-api.git",
+  "author": "Willians Faria <dev.willians.faria@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^4.5.4"
+  }
+}
