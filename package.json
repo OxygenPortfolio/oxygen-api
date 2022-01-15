@@ -6,7 +6,10 @@
 	"author": "Willians Faria <dev.willians.faria@gmail.com>",
 	"license": "MIT",
 	"scripts": {
-		"test": "jest"
+		"test": "jest --passWithNoTests --colors --silent",
+		"test:unit": "yarn test --watch",
+		"test:staged": "yarn test",
+		"test:ci": "yarn test --coverage"
 	},
 	"devDependencies": {
 		"@types/jest": "^27.4.0",
@@ -24,6 +27,9 @@
 		"typescript": "^4.5.4"
 	},
 	"lint-staged": {
-		"*.ts": ["eslint . --ext .ts"]
+		"*.ts": [
+			"eslint . --ext .ts",
+			"yarn test:staged"
+		]
 	}
 }
