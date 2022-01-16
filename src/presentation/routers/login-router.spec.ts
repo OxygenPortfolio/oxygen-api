@@ -1,6 +1,6 @@
-type HttpResponse<TData> = {
+type HttpResponse = {
 	status: number
-	data?: TData
+	data?: any
 	error?: Error
 	message?: string
 }
@@ -11,29 +11,50 @@ type LoginDto = {
 }
 
 interface Router {
-	route: (request: any) => Promise<HttpResponse<unknown>>
+	route: (request: any) => Promise<HttpResponse>
 }
 
 class HttpErrorResponse {
-	static badRequest (): HttpResponse<unknown> {
+	public static badRequest (): HttpResponse {
 		return {
 			status: 400
 		}
 	}
 }
 
+interface AuthUseCase {
+	auth: (loginData: LoginDto) => Promise<string>
+}
+
+class AuthUseCaseSpy implements AuthUseCase {
+	public accessToken = 'valid_token'
+	public password: string = ''
+	public username: string = ''
+
+	public async auth ({ username, password }: LoginDto) {
+		this.password = password
+		this.username = username
+		return this.accessToken
+	}
+}
+
 class LoginRouter implements Router {
-	async route (request: LoginDto): Promise<HttpResponse<unknown>> {
+	constructor (private readonly authUseCase: AuthUseCase) { }
+
+	public async route (request: LoginDto): Promise<HttpResponse> {
 		try {
-			if (request.username.length < 3) {
+			const { username, password } = request
+			if (username.length < 3) {
 				return HttpErrorResponse.badRequest()
 			}
 
-			if (request.password.length < 8) {
+			if (password.length < 8) {
 				return HttpErrorResponse.badRequest()
 			}
 
-			return { status: 200 }
+			const accessToken = await this.authUseCase.auth({ username, password })
+
+			return { status: 200, data: { accessToken } }
 		} catch (err) {
 			return HttpErrorResponse.badRequest()
 		}
@@ -41,8 +62,14 @@ class LoginRouter implements Router {
 }
 
 function makeSut () {
-	const sut = new LoginRouter()
-	return { sut }
+	const authUseCase = makeAuthUseCase()
+	const sut = new LoginRouter(authUseCase)
+	return { sut, authUseCase }
+}
+
+function makeAuthUseCase () {
+	const authUseCase = new AuthUseCaseSpy()
+	return authUseCase
 }
 
 describe('LoginRouter', () => {
@@ -52,7 +79,9 @@ describe('LoginRouter', () => {
 			password: 'any_password',
 			username: ''
 		}
+
 		const httpResponse = await sut.route(httpRequest)
+
 		expect(httpResponse.status).toBe(400)
 	})
 
@@ -62,7 +91,9 @@ describe('LoginRouter', () => {
 			username: 'any_username',
 			password: ''
 		}
+
 		const httpResponse = await sut.route(httpRequest)
+
 		expect(httpResponse.status).toBe(400)
 	})
 
@@ -72,7 +103,9 @@ describe('LoginRouter', () => {
 			username: '',
 			password: ''
 		}
+
 		const httpResponse = await sut.route(httpRequest)
+
 		expect(httpResponse.status).toBe(400)
 	})
 
@@ -82,7 +115,9 @@ describe('LoginRouter', () => {
 			username: 'valid_username',
 			password: 'valid_password'
 		}
+
 		const httpResponse = await sut.route(httpRequest)
+
 		expect(httpResponse.status).toBe(200)
 	})
 
@@ -93,7 +128,9 @@ describe('LoginRouter', () => {
 			username: invalidUsername,
 			password: 'valid_password'
 		}
+
 		const httpResponse = await sut.route(httpRequest)
+
 		expect(httpResponse.status).toBe(400)
 	})
 
@@ -104,7 +141,22 @@ describe('LoginRouter', () => {
 			password: invalidPassword,
 			username: 'valid_username'
 		}
+
 		const httpResponse = await sut.route(httpRequest)
+
 		expect(httpResponse.status).toBe(400)
+	})
+
+	it('Should return an access token if user is authenticated', async () => {
+		const { sut, authUseCase } = makeSut()
+		const httpRequest = {
+			password: 'valid_password',
+			username: 'valid_username'
+		}
+
+		const httpResponse = await sut.route(httpRequest)
+
+		expect(httpResponse.status).toBe(200)
+		expect(httpResponse.data.accessToken).toEqual(authUseCase.accessToken)
 	})
 })
