@@ -159,4 +159,28 @@ describe('LoginRouter', () => {
 		expect(httpResponse.status).toBe(200)
 		expect(httpResponse.data.accessToken).toEqual(authUseCase.accessToken)
 	})
+
+	it('Should call authUseCase with correct username', async () => {
+		const { sut, authUseCase } = makeSut()
+		const httpRequest = {
+			password: 'valid_password',
+			username: 'valid_username'
+		}
+
+		await sut.route(httpRequest)
+
+		expect(httpRequest.username).toEqual(authUseCase.username)
+	})
+
+	it('Should call authUseCase with correct password', async () => {
+		const { sut, authUseCase } = makeSut()
+		const httpRequest = {
+			password: 'valid_password',
+			username: 'valid_username'
+		}
+
+		await sut.route(httpRequest)
+
+		expect(httpRequest.password).toEqual(authUseCase.password)
+	})
 })
