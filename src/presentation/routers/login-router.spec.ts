@@ -1,41 +1,9 @@
-type HttpBaseResponse = {
-	status: number
-	data?: any
-	error?: Error
-	message?: string
-}
+import { LoginDto } from '../../domain/dtos/login-dto'
+import { MissingParamError, InvalidParamError } from '../../utils/errors'
+import { PasswordValidatorChainHandler, UsernameValidatorChainHandler } from '../../validators'
+import { LoginRouter } from './login-router'
 
-type LoginDto = {
-	username: string
-	password: string
-}
-
-interface Router {
-	route: (request: any) => Promise<HttpBaseResponse>
-}
-
-class HttpResponse {
-	public static badRequest (error: Error): HttpBaseResponse {
-		return {
-			status: 400,
-			message: error.message,
-			error
-		}
-	}
-
-	public static serverError (): HttpBaseResponse {
-		return {
-			status: 500,
-			message: 'Unexpected error'
-		}
-	}
-}
-
-interface AuthUseCase {
-	auth: (loginData: LoginDto) => Promise<string>
-}
-
-class AuthUseCaseSpy implements AuthUseCase {
+class AuthUseCaseSpy {
 	public accessToken = 'valid_token'
 	public password: string = ''
 	public username: string = ''
@@ -44,79 +12,6 @@ class AuthUseCaseSpy implements AuthUseCase {
 		this.password = password
 		this.username = username
 		return this.accessToken
-	}
-}
-
-class InvalidParamError extends Error {
-	constructor (fieldName: string) {
-		super(`Invalid param: ${fieldName}`)
-		this.name = 'InvalidParamError'
-	}
-}
-
-class MissingParamError extends Error {
-	constructor (fieldName: string) {
-		super(`Missing param: ${fieldName}`)
-		this.name = 'MissingParamError'
-	}
-}
-
-interface ChainHandler {
-	setNext: (handler: ChainHandler) => ChainHandler
-	handle: (request: Record<string, unknown>) => any
-}
-
-abstract class AbstractChainHandler implements ChainHandler {
-	nextHandler: ChainHandler | undefined
-
-	public setNext (chainHandler: ChainHandler) {
-		this.nextHandler = chainHandler
-		return chainHandler
-	}
-
-	public handle (request: Record<string, unknown>) {
-		if (this.nextHandler) return this.nextHandler.handle(request)
-		return null
-	}
-}
-
-class PasswordValidatorChainHandler extends AbstractChainHandler {
-	public handle (request: { password?: string }) {
-		if (!request.password) throw new MissingParamError('password')
-		if (request.password.length < 8) throw new InvalidParamError('password')
-		return super.handle(request)
-	}
-}
-
-class UsernameValidatorChainHandler extends AbstractChainHandler {
-	public handle (request: { username?: string }) {
-		if (!request.username) throw new MissingParamError('username')
-		if (request.username.length < 8) throw new InvalidParamError('username')
-		return super.handle(request)
-	}
-}
-
-class LoginRouter implements Router {
-	constructor (
-		private readonly authUseCase: AuthUseCase,
-		private readonly validatorChain: ChainHandler
-	) { }
-
-	public async route (request: LoginDto): Promise<HttpBaseResponse> {
-		try {
-			const { username, password } = request
-			this.validatorChain.handle(request)
-			const accessToken = await this.authUseCase.auth({ username, password })
-			return { status: 200, data: { accessToken } }
-		} catch (err) {
-			if (err instanceof MissingParamError) {
-				return HttpResponse.badRequest(err)
-			}
-			if (err instanceof InvalidParamError) {
-				return HttpResponse.badRequest(err)
-			}
-			return HttpResponse.serverError()
-		}
 	}
 }
 
@@ -132,6 +27,15 @@ function makeSut () {
 function makeAuthUseCase () {
 	const authUseCase = new AuthUseCaseSpy()
 	return authUseCase
+}
+
+function makeAuthUseCaseWithError () {
+	class AuthUseCaseWithErrorSpy {
+		public async auth () {
+			throw new Error('')
+		}
+	}
+	return new AuthUseCaseWithErrorSpy()
 }
 
 describe('LoginRouter', () => {
@@ -249,5 +153,15 @@ describe('LoginRouter', () => {
 		await sut.route(httpRequest)
 
 		expect(httpRequest.password).toEqual(authUseCase.password)
+	})
+
+	it('Should return status 500 if authUseCase throws', () => {
+		const authUseCaseWithError = makeAuthUseCaseWithError()
+		const validatorChain = new PasswordValidatorChainHandler()
+		const usernameValidator = new UsernameValidatorChainHandler()
+		validatorChain.setNext(usernameValidator)
+		new LoginRouter(authUseCaseWithError, validatorChain)
+
+		expect(authUseCaseWithError.auth).rejects.toThrow()
 	})
 })

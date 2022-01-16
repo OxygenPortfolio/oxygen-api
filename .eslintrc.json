@@ -19,6 +19,7 @@
         "indent": "off",
         "@typescript-eslint/indent": ["error", "tab", { "SwitchCase": 1 }],
         "no-tabs": "off",
-				"no-useless-constructor": "off"
+				"no-useless-constructor": "off",
+				"no-new": "off"
     }
 }
