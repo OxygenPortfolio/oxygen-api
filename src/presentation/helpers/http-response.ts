@@ -1,6 +1,13 @@
 import { HttpBaseResponse } from '../types/http-base-response'
 
 export class HttpResponse {
+	public static ok (data: any): HttpBaseResponse {
+		return {
+			status: 200,
+			data
+		}
+	}
+
 	public static badRequest (error: Error): HttpBaseResponse {
 		return {
 			status: 400,

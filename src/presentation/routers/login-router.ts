@@ -17,7 +17,7 @@ export class LoginRouter implements Router {
 			const { username, password } = request
 			this.validatorChain.handle(request)
 			const accessToken = await this.authUseCase.auth({ username, password })
-			return { status: 200, data: { accessToken } }
+			return HttpResponse.ok({ accessToken })
 		} catch (err) {
 			if (err instanceof MissingParamError) {
 				return HttpResponse.badRequest(err)
