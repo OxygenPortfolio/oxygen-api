@@ -14,20 +14,29 @@ interface Router {
 	route: (request: any) => Promise<HttpResponse<unknown>>
 }
 
+class HttpErrorResponse {
+	static badRequest (): HttpResponse<unknown> {
+		return {
+			status: 400
+		}
+	}
+}
+
 class LoginRouter implements Router {
 	async route (request: LoginDto): Promise<HttpResponse<unknown>> {
-		if (!request || !request.username || !request.password) {
-			return { status: 400 }
-		}
-		if (request.username.length < 3) {
-			return { status: 400 }
-		}
+		try {
+			if (request.username.length < 3) {
+				return HttpErrorResponse.badRequest()
+			}
 
-		if (request.password.length < 8) {
-			return { status: 400 }
-		}
+			if (request.password.length < 8) {
+				return HttpErrorResponse.badRequest()
+			}
 
-		return { status: 200 }
+			return { status: 200 }
+		} catch (err) {
+			return HttpErrorResponse.badRequest()
+		}
 	}
 }
 
