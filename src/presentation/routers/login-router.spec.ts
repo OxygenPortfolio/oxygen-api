@@ -1,6 +1,6 @@
 import { LoginDto } from '../../domain/dtos/login-dto'
 import { MissingParamError, InvalidParamError } from '../../utils/errors'
-import { PasswordValidatorChainHandler, UsernameValidatorChainHandler } from '../../validators'
+import { PasswordValidatorChainHandler, UsernameValidatorChainHandler } from '../../validations'
 import { LoginRouter } from './login-router'
 
 class AuthUseCaseSpy {

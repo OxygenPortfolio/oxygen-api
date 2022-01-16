@@ -1,4 +1,4 @@
-import { AbstractChainHandler } from './entities/abstract-chain-handler'
+import { AbstractChainHandler } from '../domain/entities/abstract-chain-handler'
 import { InvalidParamError, MissingParamError } from '../utils/errors'
 
 export class PasswordValidatorChainHandler extends AbstractChainHandler {

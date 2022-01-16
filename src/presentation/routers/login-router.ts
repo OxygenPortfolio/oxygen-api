@@ -1,7 +1,7 @@
 import { AuthUseCase } from '../../domain/contracts/auth-use-case'
 import { LoginDto } from '../../domain/dtos/login-dto'
 import { MissingParamError, InvalidParamError } from '../../utils/errors'
-import { ChainHandler } from '../../validators/contracts/chain-handler'
+import { ChainHandler } from '../../domain/contracts/chain-handler'
 import { Router } from '../contracts/router'
 import { HttpResponse } from '../helpers/http-response'
 import { HttpBaseResponse } from '../types/http-base-response'
