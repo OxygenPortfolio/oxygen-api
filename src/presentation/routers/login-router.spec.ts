@@ -15,6 +15,12 @@ class AuthUseCaseSpy {
 	}
 }
 
+class AuthUseCaseWithErrorSpy {
+	public async auth () {
+		throw new Error('')
+	}
+}
+
 function makeSut () {
 	const authUseCase = makeAuthUseCase()
 	const passwordValidator = new PasswordValidatorChainHandler()
@@ -30,12 +36,8 @@ function makeAuthUseCase () {
 }
 
 function makeAuthUseCaseWithError () {
-	class AuthUseCaseWithErrorSpy {
-		public async auth () {
-			throw new Error('')
-		}
-	}
-	return new AuthUseCaseWithErrorSpy()
+	const authUseCaseWithError = new AuthUseCaseWithErrorSpy()
+	return authUseCaseWithError
 }
 
 describe('LoginRouter', () => {
