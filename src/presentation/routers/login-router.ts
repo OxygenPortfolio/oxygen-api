@@ -12,10 +12,9 @@ export class LoginRouter implements Router {
 		private readonly validatorChain: ChainHandler
 	) { }
 
-	public async route (request: LoginDto): Promise<HttpBaseResponse> {
+	public async route ({ username, password }: LoginDto): Promise<HttpBaseResponse> {
 		try {
-			const { username, password } = request
-			this.validatorChain.handle(request)
+			this.validatorChain.handle({ username, password })
 			const accessToken = await this.authUseCase.auth({ username, password })
 			return HttpResponse.ok({ accessToken })
 		} catch (err) {

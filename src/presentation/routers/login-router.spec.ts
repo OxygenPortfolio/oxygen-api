@@ -103,7 +103,21 @@ describe('LoginRouter', () => {
 		const httpResponse = await sut.route(httpRequest)
 
 		expect(httpResponse.status).toBe(400)
-		expect(httpResponse.message).toBe(new InvalidParamError('username').message)
+		expect(httpResponse.message).toBe(new InvalidParamError('username must be at least 3 characters long').message)
+	})
+
+	it('Should return 400 if username has more than 24 characters', async () => {
+		const { sut } = makeSut()
+		const invalidUsername = 'too_long_username_provided'
+		const httpRequest = {
+			username: invalidUsername,
+			password: 'valid_password'
+		}
+
+		const httpResponse = await sut.route(httpRequest)
+
+		expect(httpResponse.status).toBe(400)
+		expect(httpResponse.message).toBe(new InvalidParamError('username must be at most 24 characters long').message)
 	})
 
 	it('Should return 400 if password has less than 8 characters', async () => {
