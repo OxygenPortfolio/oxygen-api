@@ -1,6 +1,7 @@
 import { LoginDto } from '../../domain/dtos/login-dto'
 import { MissingParamError, InvalidParamError } from '../../utils/errors'
 import { PasswordValidatorChainHandler, UsernameValidatorChainHandler } from '../../validations'
+import { HttpResponse } from '../helpers/http-response'
 import { LoginRouter } from './login-router'
 
 class AuthUseCaseSpy {
@@ -171,13 +172,18 @@ describe('LoginRouter', () => {
 		expect(httpRequest.password).toEqual(authUseCase.password)
 	})
 
-	it('Should return status 500 if authUseCase throws', () => {
+	it('Should return status 500 if authUseCase throws', async () => {
 		const authUseCaseWithError = makeAuthUseCaseWithError()
 		const validatorChain = new PasswordValidatorChainHandler()
 		const usernameValidator = new UsernameValidatorChainHandler()
 		validatorChain.setNext(usernameValidator)
-		new LoginRouter(authUseCaseWithError, validatorChain)
+		const sut = new LoginRouter(authUseCaseWithError, validatorChain)
+		const httpRequest = {
+			password: 'valid_password',
+			username: 'valid_username'
+		}
 
 		expect(authUseCaseWithError.auth).rejects.toThrow()
+		expect(await sut.route(httpRequest)).toEqual(HttpResponse.serverError())
 	})
 })
