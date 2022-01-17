@@ -16,9 +16,11 @@ interface UserRepository {
 
 class TokenHelperSpy implements Token {
 	public payload: undefined | any
+	public signReturn: undefined | string
 	public sign (payload: any) {
 		this.payload = payload
-		return ''
+		this.signReturn = 'token'
+		return this.signReturn
 	}
 }
 
@@ -38,6 +40,8 @@ class UserRepositorySpy implements UserRepository {
 
 class CryptoSpyWithError implements Crypto {
 	public compareParams: undefined | any
+	public compareReturn: undefined | boolean
+
 	public hash (rawString: string) {
 		return ''
 	}
@@ -45,7 +49,8 @@ class CryptoSpyWithError implements Crypto {
 	public compare (rawString: string, hashedString: string) {
 		this.compareParams = { rawString, hashedString }
 		if (rawString !== hashedString) throw new InvalidParamError('username or password is not correct')
-		return true
+		this.compareReturn = true
+		return this.compareReturn
 	}
 }
 
@@ -234,5 +239,17 @@ describe('AuthUseCase', () => {
 		await sut.auth(loginDto)
 
 		expect(cryptoSpy.compareParams).toEqual({ rawString: loginDto.password, hashedString: loginDto.password })
+	})
+
+	it('Should return encoded token when sign is successfull', async () => {
+		const { sut, tokenHelperSpy } = makeSut()
+		const loginDto: LoginDto = {
+			password: 'valid_password',
+			username: 'any_username'
+		}
+
+		await sut.auth(loginDto)
+
+		expect(tokenHelperSpy.signReturn).toBe('token')
 	})
 })
