@@ -1,18 +1,11 @@
 import { InvalidParamError, MissingParamError } from '../../utils/errors'
 import { PasswordValidatorChainHandler, UsernameValidatorChainHandler } from '../../validations'
-import { AuthUseCase as BaseAuthUseCase } from '../contracts/auth-use-case'
-import { ChainHandler } from '../contracts/chain-handler'
 import { Crypto } from '../contracts/crypto'
 import { Token } from '../contracts/token'
+import { UserRepository } from '../contracts/user-repository'
 import { LoginDto } from '../dtos/login-dto'
-
-type User = {
-	password: string
-}
-
-interface UserRepository {
-	findOneByUsername: (username: string) => Promise<User | null | undefined>
-}
+import { User } from '../types/user'
+import { AuthUseCase } from './auth-use-case'
 
 class TokenHelperSpy implements Token {
 	public payload: undefined | any
@@ -51,24 +44,6 @@ class CryptoSpyWithError implements Crypto {
 		if (rawString !== hashedString) throw new InvalidParamError('username or password is not correct')
 		this.compareReturn = true
 		return this.compareReturn
-	}
-}
-
-class AuthUseCase implements BaseAuthUseCase {
-	constructor (
-		private readonly validatorChain: ChainHandler,
-		private readonly userRepository: UserRepository,
-		private readonly cryptoHelper: Crypto,
-		private readonly tokenHelper: Token
-	) {}
-
-	public async auth ({ username, password }: LoginDto) {
-		this.validatorChain.handle({ username, password })
-		const user = await this.userRepository.findOneByUsername(username)
-		if (!user) return null
-		this.cryptoHelper.compare(password, user.password)
-		const accessToken = this.tokenHelper.sign({ user })
-		return accessToken
 	}
 }
 
