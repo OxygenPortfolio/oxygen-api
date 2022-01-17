@@ -9,7 +9,8 @@
 		"test": "jest --passWithNoTests --colors --silent",
 		"test:unit": "yarn test --watch",
 		"test:staged": "yarn test",
-		"test:ci": "yarn test --coverage"
+		"test:ci": "yarn test --coverage",
+		"prepare": "husky install"
 	},
 	"devDependencies": {
 		"@types/jest": "^27.4.0",
