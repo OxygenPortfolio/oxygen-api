@@ -252,4 +252,16 @@ describe('AuthUseCase', () => {
 
 		expect(tokenHelperSpy.signReturn).toBe('token')
 	})
+
+	it('Should return true when compare is successfull', async () => {
+		const { sut, cryptoSpy } = makeSut()
+		const loginDto: LoginDto = {
+			password: 'valid_password',
+			username: 'any_username'
+		}
+
+		await sut.auth(loginDto)
+
+		expect(cryptoSpy.compareReturn).toBe(true)
+	})
 })
