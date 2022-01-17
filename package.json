@@ -10,7 +10,8 @@
 		"test:unit": "yarn test --watch",
 		"test:staged": "yarn test",
 		"test:ci": "yarn test --coverage",
-		"prepare": "husky install"
+		"prepare": "husky install",
+		"postinstall": "husky install"
 	},
 	"devDependencies": {
 		"@types/jest": "^27.4.0",
