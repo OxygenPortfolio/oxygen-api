@@ -37,11 +37,13 @@ class UserRepositorySpy implements UserRepository {
 }
 
 class CryptoSpyWithError implements Crypto {
+	public compareParams: undefined | any
 	public hash (rawString: string) {
 		return ''
 	}
 
 	public compare (rawString: string, hashedString: string) {
+		this.compareParams = { rawString, hashedString }
 		if (rawString !== hashedString) throw new InvalidParamError('username or password is not correct')
 		return true
 	}
@@ -71,7 +73,7 @@ function makeSut () {
 	const cryptoSpy = makeCryptoSpy()
 	const tokenHelperSpy = makeTokenHelperSpy()
 	const sut = new AuthUseCase(validatorChain, userRepositorySpy, cryptoSpy, tokenHelperSpy)
-	return { sut, userRepositorySpy, tokenHelperSpy }
+	return { sut, userRepositorySpy, tokenHelperSpy, cryptoSpy }
 }
 
 function makeValidatorChain () {
@@ -220,5 +222,17 @@ describe('AuthUseCase', () => {
 		await sut.auth(loginDto)
 
 		expect(tokenHelperSpy.payload).toEqual({ user: { password: loginDto.password } })
+	})
+
+	it('Should call cryptoHelper with correct params', async () => {
+		const { sut, cryptoSpy } = makeSut()
+		const loginDto: LoginDto = {
+			password: 'valid_password',
+			username: 'any_username'
+		}
+
+		await sut.auth(loginDto)
+
+		expect(cryptoSpy.compareParams).toEqual({ rawString: loginDto.password, hashedString: loginDto.password })
 	})
 })
