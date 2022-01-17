@@ -1,3 +1,3 @@
 export interface Token {
-	sign: (payload: any) => string
+	sign(payload: any): string
 }
