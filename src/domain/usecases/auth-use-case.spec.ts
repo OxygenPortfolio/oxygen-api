@@ -15,7 +15,9 @@ interface UserRepository {
 }
 
 class TokenHelperSpy implements Token {
+	public payload: undefined | any
 	public sign (payload: any) {
+		this.payload = payload
 		return ''
 	}
 }
@@ -69,7 +71,7 @@ function makeSut () {
 	const cryptoSpy = makeCryptoSpy()
 	const tokenHelperSpy = makeTokenHelperSpy()
 	const sut = new AuthUseCase(validatorChain, userRepositorySpy, cryptoSpy, tokenHelperSpy)
-	return { sut, userRepositorySpy }
+	return { sut, userRepositorySpy, tokenHelperSpy }
 }
 
 function makeValidatorChain () {
@@ -101,7 +103,7 @@ function makeTokenHelperWithErrorSpy () {
 }
 
 describe('AuthUseCase', () => {
-	test('Should throw if invalid username is provided', async () => {
+	it('Should throw if invalid username is provided', async () => {
 		const { sut } = makeSut()
 		const loginDto: LoginDto = {
 			password: 'any_password',
@@ -112,7 +114,7 @@ describe('AuthUseCase', () => {
 		expect(sut.auth(loginDto)).rejects.toThrow()
 	})
 
-	test('Should throw if invalid password is provided', async () => {
+	it('Should throw if invalid password is provided', async () => {
 		const { sut } = makeSut()
 		const loginDto: LoginDto = {
 			password: '',
@@ -123,7 +125,7 @@ describe('AuthUseCase', () => {
 		expect(sut.auth(loginDto)).rejects.toThrow()
 	})
 
-	test('Should throw if short username is provided', async () => {
+	it('Should throw if short username is provided', async () => {
 		const { sut } = makeSut()
 		const loginDto: LoginDto = {
 			password: 'any_password',
@@ -134,7 +136,7 @@ describe('AuthUseCase', () => {
 		expect(sut.auth(loginDto)).rejects.toThrow()
 	})
 
-	test('Should throw if short password is provided', async () => {
+	it('Should throw if short password is provided', async () => {
 		const { sut } = makeSut()
 		const loginDto: LoginDto = {
 			password: 'short',
@@ -145,7 +147,7 @@ describe('AuthUseCase', () => {
 		expect(sut.auth(loginDto)).rejects.toThrow()
 	})
 
-	test('Should return an access token when valid data is provided', async () => {
+	it('Should return an access token when valid data is provided', async () => {
 		const { sut } = makeSut()
 		const loginDto: LoginDto = {
 			password: 'valid_password',
@@ -158,7 +160,7 @@ describe('AuthUseCase', () => {
 		expect(accessToken).toBeDefined()
 	})
 
-	test('Should return null if theres no user registered with provided username', async () => {
+	it('Should return null if theres no user registered with provided username', async () => {
 		const { sut, userRepositorySpy } = makeSut()
 		userRepositorySpy.user = null
 		const loginDto: LoginDto = {
@@ -172,7 +174,7 @@ describe('AuthUseCase', () => {
 		expect(userRepositorySpy.user).toBe(accessToken)
 	})
 
-	test('Should throw if too long username is provided', async () => {
+	it('Should throw if too long username is provided', async () => {
 		const { sut } = makeSut()
 		const loginDto: LoginDto = {
 			password: 'any_password',
@@ -183,7 +185,7 @@ describe('AuthUseCase', () => {
 		expect(sut.auth(loginDto)).rejects.toThrow()
 	})
 
-	test('Should return invalid param error if user is found but password is incorrect', async () => {
+	it('Should return invalid param error if user is found but password is incorrect', async () => {
 		const { sut } = makeSut()
 		const loginDto: LoginDto = {
 			password: 'wrong_password',
@@ -194,7 +196,7 @@ describe('AuthUseCase', () => {
 		expect(sut.auth(loginDto)).rejects.toThrow()
 	})
 
-	test('Should throw if tokenHelper fails', async () => {
+	it('Should throw if tokenHelper fails', async () => {
 		const validatorChain = makeValidatorChain()
 		const userRepository = makeUserRepositorySpy()
 		const cryptoHelperSpy = makeCryptoSpy()
@@ -206,5 +208,17 @@ describe('AuthUseCase', () => {
 		}
 
 		expect(sut.auth(loginDto)).rejects.toThrow()
+	})
+
+	it('Should call tokenHelper with correct params', async () => {
+		const { sut, tokenHelperSpy } = makeSut()
+		const loginDto: LoginDto = {
+			password: 'valid_password',
+			username: 'any_username'
+		}
+
+		await sut.auth(loginDto)
+
+		expect(tokenHelperSpy.payload).toEqual({ user: { password: loginDto.password } })
 	})
 })
