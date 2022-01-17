@@ -67,8 +67,8 @@ class AuthUseCase implements BaseAuthUseCase {
 		const user = await this.userRepository.findOneByUsername(username)
 		if (!user) return null
 		this.cryptoHelper.compare(password, user.password)
-		this.tokenHelper.sign({ user })
-		return 'token'
+		const accessToken = this.tokenHelper.sign({ user })
+		return accessToken
 	}
 }
 
@@ -253,7 +253,7 @@ describe('AuthUseCase', () => {
 		expect(tokenHelperSpy.signReturn).toBe('token')
 	})
 
-	it('Should return true when compare is successfull', async () => {
+	it('Should return true when compare is successful', async () => {
 		const { sut, cryptoSpy } = makeSut()
 		const loginDto: LoginDto = {
 			password: 'valid_password',
@@ -263,5 +263,17 @@ describe('AuthUseCase', () => {
 		await sut.auth(loginDto)
 
 		expect(cryptoSpy.compareReturn).toBe(true)
+	})
+
+	it('Should return correct access token successful', async () => {
+		const { sut, tokenHelperSpy } = makeSut()
+		const loginDto: LoginDto = {
+			password: 'valid_password',
+			username: 'any_username'
+		}
+
+		const accessToken = await sut.auth(loginDto)
+
+		expect(tokenHelperSpy.signReturn).toBe(accessToken)
 	})
 })
