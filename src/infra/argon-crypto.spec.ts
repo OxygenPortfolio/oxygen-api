@@ -61,4 +61,12 @@ describe('ArgonCrypto', () => {
 		expect(hashedString).toBe('hashed_string')
 		expect(hashedString).toBe((argon2 as any).hashedString)
 	})
+
+	it('Should throw if argon fails', async () => {
+		const { sut } = makeSut()
+		const rawString = 'error_string'
+
+		expect(sut.hash(rawString)).rejects.toThrow()
+		expect(sut.hash(rawString)).rejects.toEqual(new CryptoError('There was an error hashing the provided string'))
+	})
 })

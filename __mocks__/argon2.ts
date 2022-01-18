@@ -8,6 +8,7 @@ export default {
 		throw new Error()
 	},
 	async hash (plainString: string) {
+		if (plainString === 'error_string') throw new Error()
 		return this.hashedString
 	}
 }
