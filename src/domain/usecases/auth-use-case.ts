@@ -17,7 +17,7 @@ export class AuthUseCase implements BaseAuthUseCase {
 		this.validatorChain.handle({ username, password })
 		const user = await this.userRepository.findOneByUsername(username)
 		if (!user) return null
-		this.cryptoHelper.compare(password, user.password)
+		await this.cryptoHelper.compare(password, user.password)
 		const accessToken = this.tokenHelper.sign({ user })
 		return accessToken
 	}

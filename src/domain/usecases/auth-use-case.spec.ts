@@ -35,11 +35,11 @@ class CryptoSpyWithError implements Crypto {
 	public compareParams: undefined | any
 	public compareReturn: undefined | boolean
 
-	public hash (rawString: string) {
+	public async hash (rawString: string) {
 		return ''
 	}
 
-	public compare (rawString: string, hashedString: string) {
+	public async compare (rawString: string, hashedString: string) {
 		this.compareParams = { rawString, hashedString }
 		if (rawString !== hashedString) throw new InvalidParamError('username or password is not correct')
 		this.compareReturn = true
