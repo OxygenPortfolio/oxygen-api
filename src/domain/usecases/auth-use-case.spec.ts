@@ -125,7 +125,7 @@ describe('AuthUseCase', () => {
 			username: 'any_username'
 		}
 
-		expect(sut.auth(loginDto)).rejects.toEqual(new InvalidParamError('password'))
+		expect(sut.auth(loginDto)).rejects.toEqual(new InvalidParamError('password must be at least 8 characters long'))
 		expect(sut.auth(loginDto)).rejects.toThrow()
 	})
 

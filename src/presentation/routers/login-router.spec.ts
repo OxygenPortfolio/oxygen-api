@@ -132,7 +132,7 @@ describe('LoginRouter', () => {
 		const httpResponse = await sut.route(httpRequest)
 
 		expect(httpResponse.status).toBe(400)
-		expect(httpResponse.message).toBe(new InvalidParamError('password').message)
+		expect(httpResponse.message).toBe(new InvalidParamError('password must be at least 8 characters long').message)
 	})
 
 	it('Should return an access token if user is authenticated', async () => {
