@@ -26,8 +26,12 @@ class TokenHelperSpyWithError {
 
 class UserRepositorySpy implements UserRepository {
 	public user: null | undefined | User
-	public async findOneByUsername (username: string) {
+	public async findOneByUsername (_username: string): Promise<User | null | undefined> {
 		return this.user
+	}
+
+	public async insert (_userData: User): Promise<User> {
+		return this.user as User
 	}
 }
 
@@ -65,7 +69,7 @@ function makeValidatorChain () {
 
 function makeUserRepositorySpy () {
 	const userRepositorySpy = new UserRepositorySpy()
-	userRepositorySpy.user = { password: 'valid_password' }
+	userRepositorySpy.user = { password: 'valid_password', username: 'valid_username' }
 	return userRepositorySpy
 }
 
@@ -196,12 +200,12 @@ describe('AuthUseCase', () => {
 		const { sut, tokenHelperSpy } = makeSut()
 		const loginDto: LoginDto = {
 			password: 'valid_password',
-			username: 'any_username'
+			username: 'valid_username'
 		}
 
 		await sut.auth(loginDto)
 
-		expect(tokenHelperSpy.payload).toEqual({ user: { password: loginDto.password } })
+		expect(tokenHelperSpy.payload).toEqual({ user: loginDto })
 	})
 
 	it('Should call cryptoHelper with correct params', async () => {
