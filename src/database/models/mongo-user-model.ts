@@ -7,6 +7,9 @@ export class MongoUserSchema extends BaseModel {
 
 	@prop({ type: () => String, required: true, unique: true })
 	public username: string
+
+	@prop({ type: () => String, required: true, unique: true })
+	public email: string
 }
 
 export const MongoUserModel = getModelForClass(MongoUserSchema, { schemaOptions: { timestamps: true } })

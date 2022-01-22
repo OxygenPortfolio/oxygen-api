@@ -15,7 +15,8 @@ function makeSut () {
 function makeUser (): User {
 	return {
 		username: 'valid_username',
-		password: 'valid_password'
+		password: 'valid_password',
+		email: 'valid_email@mail.com'
 	}
 }
 

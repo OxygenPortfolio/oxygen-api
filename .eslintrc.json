@@ -21,6 +21,7 @@
         "no-tabs": "off",
 				"no-useless-constructor": "off",
 				"no-new": "off",
-				"no-unreachable": "off"
+				"no-unreachable": "off",
+				"no-useless-escape": "off"
     }
 }

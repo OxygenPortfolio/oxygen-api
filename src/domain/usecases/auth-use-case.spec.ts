@@ -67,9 +67,17 @@ function makeValidatorChain () {
 	return usernameValidator
 }
 
+function makeUser () {
+	return {
+		password: 'valid_password',
+		username: 'valid_username',
+		email: 'valid_email@mail.com'
+	}
+}
+
 function makeUserRepositorySpy () {
 	const userRepositorySpy = new UserRepositorySpy()
-	userRepositorySpy.user = { password: 'valid_password', username: 'valid_username' }
+	userRepositorySpy.user = makeUser()
 	return userRepositorySpy
 }
 
@@ -205,7 +213,7 @@ describe('AuthUseCase', () => {
 
 		await sut.auth(loginDto)
 
-		expect(tokenHelperSpy.payload).toEqual({ user: loginDto })
+		expect(tokenHelperSpy.payload).toEqual({ user: { ...loginDto, email: 'valid_email@mail.com' } })
 	})
 
 	it('Should call cryptoHelper with correct params', async () => {
