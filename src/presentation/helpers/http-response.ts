@@ -2,31 +2,18 @@ import { HttpBaseResponse } from '../types/http-base-response'
 
 export class HttpResponse {
 	public static ok (data: any): HttpBaseResponse {
-		return {
-			status: 200,
-			data
-		}
+		return new HttpBaseResponse({ status: 200, data })
 	}
 
 	public static created (data: any): HttpBaseResponse {
-		return {
-			status: 201,
-			data
-		}
+		return new HttpBaseResponse({ status: 201, data })
 	}
 
 	public static badRequest (error: Error): HttpBaseResponse {
-		return {
-			status: 400,
-			message: error.message,
-			error
-		}
+		return new HttpBaseResponse({ status: 400, message: error.message, error })
 	}
 
 	public static serverError (): HttpBaseResponse {
-		return {
-			status: 500,
-			message: 'Unexpected error'
-		}
+		return new HttpBaseResponse({ status: 500, message: 'Unexpected error' })
 	}
 }
