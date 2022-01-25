@@ -10,8 +10,14 @@ import { HttpBaseResponse } from '../types/http-base-response'
 class CreatePortfolioUseCaseSpy implements CreatePortfolioUseCase {
 	public params: CreatePortfolioDto
 	public return: CreatePortfolioDto
-	public async create (portfolioDto: CreatePortfolioDto): Promise<unknown> {
+	public async create (_portfolioDto: CreatePortfolioDto): Promise<unknown> {
 		return this.return
+	}
+}
+
+class CreatePortfolioUseCaseWithErrorSpy {
+	public async create (portfolioDto: CreatePortfolioDto): Promise<unknown> {
+		throw new Error()
 	}
 }
 
@@ -45,6 +51,11 @@ function makeCreatePortfolioUseCaseSpy () {
 	const createPortfolioUseCaseSpy = new CreatePortfolioUseCaseSpy()
 	createPortfolioUseCaseSpy.return = makePortfolio()
 	createPortfolioUseCaseSpy.params = makePortfolio()
+	return createPortfolioUseCaseSpy
+}
+
+function makeCreatePortfolioUseCaseWithErrorSpy () {
+	const createPortfolioUseCaseSpy = new CreatePortfolioUseCaseWithErrorSpy()
 	return createPortfolioUseCaseSpy
 }
 
@@ -97,5 +108,17 @@ describe('CreatePortfolioRouter', () => {
 		await sut.route(portfolio)
 
 		expect(createPortfolioUseCase.params).toEqual(portfolio)
+	})
+
+	it('Should return status 500 if an unexpected error occurs', async () => {
+		const validatorChain = makeValidatorChain()
+		const createPortfolioUseCaseSpy = makeCreatePortfolioUseCaseWithErrorSpy()
+		const portfolio = makePortfolio()
+		const sut = new CreatePortfolioRouter(validatorChain, createPortfolioUseCaseSpy)
+
+		const response = await sut.route(portfolio)
+
+		expect(response.status).toBe(500)
+		expect(response.message).toBe('Unexpected error')
 	})
 })
