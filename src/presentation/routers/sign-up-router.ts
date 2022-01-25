@@ -18,12 +18,8 @@ export class SignUpRouter implements Router {
 			const accessToken = await this.signUpUseCase.signUp({ username, password, email })
 			return HttpResponse.created({ accessToken })
 		} catch (err) {
-			if (err instanceof MissingParamError) {
-				return HttpResponse.badRequest(err)
-			}
-			if (err instanceof InvalidParamError) {
-				return HttpResponse.badRequest(err)
-			}
+			if (err instanceof MissingParamError) return HttpResponse.badRequest(err)
+			if (err instanceof InvalidParamError) return HttpResponse.badRequest(err)
 			return HttpResponse.serverError()
 		}
 	}

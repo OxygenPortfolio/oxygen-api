@@ -18,12 +18,8 @@ export class LoginRouter implements Router {
 			const accessToken = await this.authUseCase.auth({ username, password })
 			return HttpResponse.ok({ accessToken })
 		} catch (err) {
-			if (err instanceof MissingParamError) {
-				return HttpResponse.badRequest(err)
-			}
-			if (err instanceof InvalidParamError) {
-				return HttpResponse.badRequest(err)
-			}
+			if (err instanceof MissingParamError) return HttpResponse.badRequest(err)
+			if (err instanceof InvalidParamError) return HttpResponse.badRequest(err)
 			return HttpResponse.serverError()
 		}
 	}

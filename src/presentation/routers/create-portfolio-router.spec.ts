@@ -1,6 +1,6 @@
 import { ChainHandler } from '../../domain/contracts/chain-handler'
 import { CreatePortfolioDto } from '../../domain/dtos/create-portfolio-dto'
-import { MissingParamError } from '../../utils/errors'
+import { InvalidParamError, MissingParamError } from '../../utils/errors'
 import { PortfolioNameValidatorChainHandler } from '../../validations'
 import { Router } from '../contracts/router'
 import { HttpResponse } from '../helpers/http-response'
@@ -17,6 +17,7 @@ class CreatePortfolioRouter implements Router {
 			return HttpResponse.created({})
 		} catch (err) {
 			if (err instanceof MissingParamError) return HttpResponse.badRequest(err)
+			if (err instanceof InvalidParamError) return HttpResponse.badRequest(err)
 			return HttpResponse.serverError()
 		}
 	}
@@ -57,5 +58,15 @@ describe('CreatePortfolioRouter', () => {
 
 		expect(response.status).toBe(400)
 		expect(response.error).toEqual(new MissingParamError('name'))
+	})
+
+	it('Should return 400 with long portfolio name', async () => {
+		const { sut } = makeSut()
+		const portfolio = { name: '______________________too_long_____________________' }
+
+		const response = await sut.route(portfolio)
+
+		expect(response.status).toBe(400)
+		expect(response.error).toEqual(new InvalidParamError('name must be at most 50 characters long'))
 	})
 })
