@@ -1,4 +1,5 @@
 import { ChainHandler } from '../../domain/contracts/chain-handler'
+import { CreatePortfolioUseCase } from '../../domain/contracts/create-portfolio-use-case'
 import { CreatePortfolioDto } from '../../domain/dtos/create-portfolio-dto'
 import { InvalidParamError, MissingParamError } from '../../utils/errors'
 import { PortfolioNameValidatorChainHandler } from '../../validations'
@@ -6,15 +7,25 @@ import { Router } from '../contracts/router'
 import { HttpResponse } from '../helpers/http-response'
 import { HttpBaseResponse } from '../types/http-base-response'
 
+class CreatePortfolioUseCaseSpy implements CreatePortfolioUseCase {
+	public params: CreatePortfolioDto
+	public return: CreatePortfolioDto
+	public async create (portfolioDto: CreatePortfolioDto): Promise<unknown> {
+		return this.return
+	}
+}
+
 class CreatePortfolioRouter implements Router {
 	constructor (
-		private readonly validatorChain: ChainHandler
+		private readonly validatorChain: ChainHandler,
+		private readonly createPortfolioUseCase: CreatePortfolioUseCase
 	) {}
 
 	public async route ({ name }: CreatePortfolioDto): Promise<HttpBaseResponse> {
 		try {
 			this.validatorChain.handle({ name })
-			return HttpResponse.created({})
+			const portfolio = await this.createPortfolioUseCase.create({ name })
+			return HttpResponse.created(portfolio)
 		} catch (err) {
 			if (err instanceof MissingParamError) return HttpResponse.badRequest(err)
 			if (err instanceof InvalidParamError) return HttpResponse.badRequest(err)
@@ -25,8 +36,16 @@ class CreatePortfolioRouter implements Router {
 
 function makeSut () {
 	const validatorChain = makeValidatorChain()
-	const sut = new CreatePortfolioRouter(validatorChain)
-	return { sut }
+	const createPortfolioUseCase = makeCreatePortfolioUseCaseSpy()
+	const sut = new CreatePortfolioRouter(validatorChain, createPortfolioUseCase)
+	return { sut, createPortfolioUseCase }
+}
+
+function makeCreatePortfolioUseCaseSpy () {
+	const createPortfolioUseCaseSpy = new CreatePortfolioUseCaseSpy()
+	createPortfolioUseCaseSpy.return = makePortfolio()
+	createPortfolioUseCaseSpy.params = makePortfolio()
+	return createPortfolioUseCaseSpy
 }
 
 function makePortfolio (): CreatePortfolioDto {
@@ -48,6 +67,7 @@ describe('CreatePortfolioRouter', () => {
 		const response = await sut.route(portfolio)
 
 		expect(response.status).toBe(201)
+		expect(response.data).toEqual(portfolio)
 	})
 
 	it('Should return 400 with invalid portfolio name', async () => {
@@ -68,5 +88,14 @@ describe('CreatePortfolioRouter', () => {
 
 		expect(response.status).toBe(400)
 		expect(response.error).toEqual(new InvalidParamError('name must be at most 50 characters long'))
+	})
+
+	it('Should call createPortfolioUseCase with correct params', async () => {
+		const { sut, createPortfolioUseCase } = makeSut()
+		const portfolio = makePortfolio()
+
+		await sut.route(portfolio)
+
+		expect(createPortfolioUseCase.params).toEqual(portfolio)
 	})
 })
