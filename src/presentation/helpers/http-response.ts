@@ -8,6 +8,13 @@ export class HttpResponse {
 		}
 	}
 
+	public static created (data: any): HttpBaseResponse {
+		return {
+			status: 201,
+			data
+		}
+	}
+
 	public static badRequest (error: Error): HttpBaseResponse {
 		return {
 			status: 400,

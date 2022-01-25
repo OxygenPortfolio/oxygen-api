@@ -1,10 +1,21 @@
 import { InvalidParamError } from '../../utils/errors'
 import { DatabaseError } from '../../utils/errors/database-error'
 import { PasswordValidatorChainHandler, UsernameValidatorChainHandler, EmailValidatorChainHandler } from '../../validations'
+import { Token } from '../contracts/token'
 import { UserRepository } from '../contracts/user-repository'
 import { SignUpDto } from '../dtos/sign-up-dto'
 import { User } from '../types/user'
 import { SignUpUseCase } from './sign-up-use-case'
+
+class TokenHelperSpy implements Token {
+	public payload: undefined | any
+	public signReturn: undefined | string
+	public sign (payload: any) {
+		this.payload = payload
+		this.signReturn = 'token'
+		return this.signReturn
+	}
+}
 
 class UserRepositorySpy implements UserRepository {
 	public user = makeUser()
@@ -21,8 +32,9 @@ class UserRepositorySpy implements UserRepository {
 function makeSut () {
 	const validatorChain = makeValidatorChain()
 	const userRepository = makeUserRepository()
-	const sut = new SignUpUseCase(validatorChain, userRepository)
-	return { sut }
+	const tokenHelperSpy = makeTokenHelper()
+	const sut = new SignUpUseCase(validatorChain, userRepository, tokenHelperSpy)
+	return { sut, tokenHelperSpy }
 }
 
 function makeValidatorChain () {
@@ -40,6 +52,11 @@ function makeUserRepository () {
 	return userRepository
 }
 
+function makeTokenHelper () {
+	const tokenHelper = new TokenHelperSpy()
+	return tokenHelper
+}
+
 function makeUser (): SignUpDto {
 	return {
 		username: 'valid_username',
@@ -50,13 +67,13 @@ function makeUser (): SignUpDto {
 
 describe('SignUpUseCase', () => {
 	it('Should return registered user with valid data', async () => {
-		const { sut } = makeSut()
+		const { sut, tokenHelperSpy } = makeSut()
 		const signUpDto = makeUser()
 
-		const user = await sut.signUp(signUpDto)
+		const accessToken = await sut.signUp(signUpDto)
 
-		expect(user).toBeDefined()
-		expect(user).toEqual(signUpDto)
+		expect(accessToken).toBeDefined()
+		expect(accessToken).toEqual(tokenHelperSpy.signReturn)
 	})
 
 	it('Should throw if username is too short', async () => {
@@ -122,5 +139,18 @@ describe('SignUpUseCase', () => {
 
 		expect(async () => { await sut.signUp(signUpDto) }).rejects.toThrow()
 		expect(async () => { await sut.signUp(signUpDto) }).rejects.toEqual(new DatabaseError(`user with username ${signUpDto.username} is already registered`))
+	})
+
+	it('Should call tokenHelper with correct params', async () => {
+		const { sut, tokenHelperSpy } = makeSut()
+		const signUpDto: SignUpDto = {
+			password: 'valid_password',
+			username: 'valid_username',
+			email: 'valid_email@mail.com'
+		}
+
+		await sut.signUp(signUpDto)
+
+		expect(tokenHelperSpy.payload).toEqual({ user: signUpDto })
 	})
 })
