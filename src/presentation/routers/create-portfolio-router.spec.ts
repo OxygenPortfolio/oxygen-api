@@ -16,7 +16,7 @@ class CreatePortfolioUseCaseSpy implements CreatePortfolioUseCase {
 }
 
 class CreatePortfolioUseCaseWithErrorSpy {
-	public async create (portfolioDto: CreatePortfolioDto): Promise<unknown> {
+	public async create (_portfolioDto: CreatePortfolioDto): Promise<unknown> {
 		throw new Error()
 	}
 }

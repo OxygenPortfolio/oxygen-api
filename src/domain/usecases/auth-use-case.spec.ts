@@ -18,7 +18,7 @@ class TokenHelperSpy implements Token {
 }
 
 class TokenHelperSpyWithError {
-	public sign (payload: any) {
+	public sign (_payload: any) {
 		throw new Error()
 		return ''
 	}
@@ -39,7 +39,7 @@ class CryptoSpyWithError implements Crypto {
 	public compareParams: undefined | any
 	public compareReturn: undefined | boolean
 
-	public async hash (rawString: string) {
+	public async hash (_rawString: string) {
 		return ''
 	}
 
